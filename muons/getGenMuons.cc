@@ -12,10 +12,14 @@ To RUN:
 
 */
 
+float minPt = 10; 
+
 // WJetsToLNu_TuneCP5_13p6TeV-madgraphMLM-pythia8/Run3Winter22NanoAOD-122X_mcRun3_2021_realistic_v9-v1/NANOAODSIM
 TString fn_WJets_nanoAOD = "./data/run3/1f48109d-c7d9-416f-8f6b-71906ce61d45.root";
 // DYJetsToLL_M-50_TuneCP5_13p6TeV-madgraphMLM-pythia8/Run3Winter22NanoAOD-122X_mcRun3_2021_realistic_v9_ext2-v1/NANOAODSIM
-TString fn_DY_nanoAOD = "./data/run3/fb32c113-0866-4653-b462-a7c99263ef13.root";
+//TString fn_DY_nanoAOD = "./data/run3/fb32c113-0866-4653-b462-a7c99263ef13.root";
+// DYJetsToLL_M-10to50_TuneCP5_13p6TeV-madgraphMLM-pythia8/Run3Winter22NanoAOD-122X_mcRun3_2021_realistic_v9-v1/NANOAODSIM
+TString fn_DY_nanoAOD = "./data/run3/2518689b-3bc6-482c-a47d-2bd1d1db451e.root";
 // Run 2 WJets pT
 TString fn_muon_pt_WJets_run2 = "./data/run2/WJets_CutPtSpect_v2.root";
 // Run 2 DY pT
@@ -46,22 +50,33 @@ void progress( int curr, int tot, int period, unsigned int smoothing) {
     }
 }
 
-bool Has_Boson_Ancestor(int ipart, int motherID,
+bool Has_Boson_Ancestor(int ipart, TString processName,
 			const TTreeReaderArray<int>& genpart_pdgId,
 			const TTreeReaderArray<int>& genpart_motherIdx) {
 
     bool has_boson_ancestor = false;
     int parent_idx = genpart_motherIdx[ipart];
+    int motherID = genpart_pdgId[parent_idx];
 
+    //cout << "###" << endl;
     while (parent_idx != -1) {
-	if (abs(genpart_pdgId[parent_idx]) == motherID) {
+      //cout << "motherID: " << genpart_pdgId[parent_idx] << endl;
+	if (processName == "WJets" && abs(motherID) == 24) {
 	    has_boson_ancestor = true;
 	    break;
 	}
-	if (abs(genpart_pdgId[parent_idx]) != 13) break; // ignore muon from pion etc, sometimes in pythia muon->muon
+	if (processName == "DY" &&
+	    (abs(motherID) == 23 ||  
+	    (abs(motherID) >= 1 && abs(motherID) <= 6))) {
+	    has_boson_ancestor = true;
+	    break;
+	}
+
 	parent_idx = genpart_motherIdx[parent_idx];
+	motherID = genpart_pdgId[parent_idx];
     }
 
+    //cout << "has_boson_ancestor: " << has_boson_ancestor << ", motherID: " << motherID << endl;
     return has_boson_ancestor;
 }
 
@@ -101,14 +116,10 @@ void getGenMuons(TString processName /* WJets or DY */) {
 	// Loop over the generator level particles in the event
 	for (int ipart = 0; ipart < genpart_pdgId.GetSize(); ++ipart){
 
-	    int motherID = -999;	  
-	    if (processName == "WJets") motherID = 24;
-	    if (processName == "DY") motherID = 23;
-
 	    // Select only the status 1 muons that decay from the W or Z boson
 	    if ( !(abs(genpart_pdgId[ipart]) == 13 && genpart_status[ipart] == 1) ) continue;
 
-	    bool has_boson_ancestor = Has_Boson_Ancestor(ipart, motherID, genpart_pdgId, genpart_motherIdx);
+	    bool has_boson_ancestor = Has_Boson_Ancestor(ipart, processName, genpart_pdgId, genpart_motherIdx);
 
 	    float pt = genpart_pt[ipart];
 	    float eta = genpart_eta[ipart];
@@ -126,7 +137,7 @@ void getGenMuons(TString processName /* WJets or DY */) {
 		// Fill the histograms with the eta and pT of the selected muon
 		h_eta->Fill(muon.Eta());
 		h_phi->Fill(muon.Phi());
-		h_pt->Fill(muon.Pt());
+		if (muon.Pt() > minPt) h_pt->Fill(muon.Pt());
 	    }
 
 	}
@@ -153,8 +164,17 @@ void getGenMuons(TString processName /* WJets or DY */) {
     pad3->Draw();
 
     pad1->cd();
-    h_pt->Draw();
+    h_pt->Draw("HIST");
     h_pt->GetXaxis()->SetTitle("pT (GeV)");
+    h_pt->Scale(h_pt_run2->Integral()/h_pt->Integral());
+    h_pt_run2->Draw("HIST same");
+    h_pt_run2->SetLineColor(2);
+
+    // Create a TLegend and add entries to it
+    TLegend *legend = new TLegend(0.7, 0.7, 0.9, 0.9); // x1,y1,x2,y2 (in normalized coordinates)
+    legend->AddEntry(h_pt, "Run 3 sample", "l");
+    legend->AddEntry(h_pt_run2, "Run 2 sample", "l");
+    legend->Draw("same");
 
     pad2->cd();
     h_eta->Draw();
@@ -168,17 +188,5 @@ void getGenMuons(TString processName /* WJets or DY */) {
     c->SaveAs(fn_plot);
 
     //h_pt->Draw("pe");
-    //h_pt->GetXaxis()->SetTitle("pT (GeV)");
-    //h_pt->Scale(h_pt_run2->Integral()/h_pt->Integral());
-    //h_pt_run2->Draw("pe same");
-    //h_pt_run2->SetLineColor(2);
-
-    // Create a TLegend and add entries to it
-    /*
-    TLegend *legend = new TLegend(0.7, 0.7, 0.9, 0.9); // x1,y1,x2,y2 (in normalized coordinates)
-    legend->AddEntry(h_pt, "Run 3 sample", "l");
-    legend->AddEntry(h_pt_run2, "Run 2 sample", "l");
-    legend->Draw("same");
-    */
 }
 
