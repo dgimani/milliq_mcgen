@@ -190,9 +190,11 @@ void getGenMuons(TString processName /* WJets or DY */) {
     //cout << "Scale factor: " << xs_WJets/nEntries << endl;
     
     //if (processName == "WJets") h_pt->Scale(xs_WJets/nEntries, "width");
+    //if (processName == "DY50") h_pt->Scale(xs_DY50/nEntries*2, "width");
+    //if (processName == "DY10_50") h_pt->Scale(xs_DY10_50/nEntries*2, "width");
     if (processName == "WJets") h_pt->Scale(xs_WJets/nEntries);
-    if (processName == "DY50") h_pt->Scale(xs_DY50/nEntries); //*2);
-    if (processName == "DY10_50") h_pt->Scale(xs_DY10_50/nEntries); //*2);
+    if (processName == "DY50") h_pt->Scale(xs_DY50/nEntries);
+    if (processName == "DY10_50") h_pt->Scale(xs_DY10_50/nEntries);
 
     h_pt->GetYaxis()->SetRangeUser(0, h_pt->GetMaximum()*1.5);
 
