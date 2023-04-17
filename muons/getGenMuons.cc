@@ -8,18 +8,25 @@
 To RUN:
 
    root -l -q -b 'getGenMuons.cc("WJets")'
-   root -l -q -b 'getGenMuons.cc("DY")'
+   root -l -q -b 'getGenMuons.cc("DY50")'
+   root -l -q -b 'getGenMuons.cc("DY10_50")'
 
 */
 
 float minPt = 10; 
+float minEta = -0.025;
+float maxEta = 0.025;
+//float xs_WJets = 53940*1000; // From Run 2 LO xs, fb
+float xs_WJets = 67350*1000; // From Run 2 NLO xs, fb
+float xs_DY50 = 5558*1000; // Run 3 xs, fb
+float xs_DY10_50 = 15910*1000; // From Run 2 xs, fb
 
 // WJetsToLNu_TuneCP5_13p6TeV-madgraphMLM-pythia8/Run3Winter22NanoAOD-122X_mcRun3_2021_realistic_v9-v1/NANOAODSIM
 TString fn_WJets_nanoAOD = "./data/run3/1f48109d-c7d9-416f-8f6b-71906ce61d45.root";
 // DYJetsToLL_M-50_TuneCP5_13p6TeV-madgraphMLM-pythia8/Run3Winter22NanoAOD-122X_mcRun3_2021_realistic_v9_ext2-v1/NANOAODSIM
-//TString fn_DY_nanoAOD = "./data/run3/fb32c113-0866-4653-b462-a7c99263ef13.root";
+TString fn_DY50_nanoAOD = "./data/run3/fb32c113-0866-4653-b462-a7c99263ef13.root";
 // DYJetsToLL_M-10to50_TuneCP5_13p6TeV-madgraphMLM-pythia8/Run3Winter22NanoAOD-122X_mcRun3_2021_realistic_v9-v1/NANOAODSIM
-TString fn_DY_nanoAOD = "./data/run3/2518689b-3bc6-482c-a47d-2bd1d1db451e.root";
+TString fn_DY10_50_nanoAOD = "./data/run3/2518689b-3bc6-482c-a47d-2bd1d1db451e.root";
 // Run 2 WJets pT
 TString fn_muon_pt_WJets_run2 = "./data/run2/WJets_CutPtSpect_v2.root";
 // Run 2 DY pT
@@ -61,19 +68,25 @@ bool Has_Boson_Ancestor(int ipart, TString processName,
     //cout << "###" << endl;
     while (parent_idx != -1) {
       //cout << "motherID: " << genpart_pdgId[parent_idx] << endl;
-	if (processName == "WJets" && abs(motherID) == 24) {
-	    has_boson_ancestor = true;
-	    break;
-	}
-	if (processName == "DY" &&
-	    (abs(motherID) == 23 ||  
-	    (abs(motherID) >= 1 && abs(motherID) <= 6))) {
-	    has_boson_ancestor = true;
-	    break;
-	}
+      if (processName == "WJets" && abs(motherID) == 24) {
+	has_boson_ancestor = true;
+	break;
+      }
+      if (processName == "DY50" && abs(motherID) == 23) { 
+	// consider both Z and gamma*
+	has_boson_ancestor = true;
+	break;
+      }
+      if (processName == "DY10_50" && (abs(motherID) >= 1 && abs(motherID) <= 6)) { 
+	// consider both Z and gamma*
+	has_boson_ancestor = true;
+	break;
+      }
 
-	parent_idx = genpart_motherIdx[parent_idx];
-	motherID = genpart_pdgId[parent_idx];
+      //if ( abs(motherID) > 13 ) break;
+      
+      parent_idx = genpart_motherIdx[parent_idx];
+      motherID = genpart_pdgId[parent_idx];
     }
 
     //cout << "has_boson_ancestor: " << has_boson_ancestor << ", motherID: " << motherID << endl;
@@ -85,7 +98,8 @@ void getGenMuons(TString processName /* WJets or DY */) {
     // Open the CMS nanoAOD file and access the Events tree
     TString fn_nanoAOD = "";
     if (processName == "WJets") fn_nanoAOD = fn_WJets_nanoAOD;
-    if (processName == "DY") fn_nanoAOD = fn_DY_nanoAOD;
+    if (processName == "DY50") fn_nanoAOD = fn_DY50_nanoAOD;
+    if (processName == "DY10_50") fn_nanoAOD = fn_DY10_50_nanoAOD;
     
     TFile *file = TFile::Open(fn_nanoAOD);
     TTreeReader reader("Events", file);
@@ -102,14 +116,12 @@ void getGenMuons(TString processName /* WJets or DY */) {
     // Create histograms to plot the eta and pT distribution of the selected muon
     TH1F* h_eta = new TH1F("h_eta", "Muon Eta Distribution", 50, -3.0, 3.0);
     TH1F* h_phi = new TH1F("h_phi", "Muon Phi Distribution", 50, -4.0, 4.0);
-    TH1F* h_pt = new TH1F("h_pt", "Muon PT Distribution", 40, 0, 100);
+    //TH1F* h_pt = new TH1F("h_pt", "Muon PT Distribution", 40, 0, 100);
+    TH1F* h_pt = new TH1F("h_pt", "Muon PT Distribution", 100, 0, 100);
 
     // Loop over the events in the tree
     int counter = 0;
     while (reader.Next()) {
-
-      //If (counter > 100000) break;
-      //if (counter % 10000) cout << "Processed " << counter << " events" << endl;
 
 	progress(counter, nEntries, 1000, 300);
 
@@ -128,8 +140,6 @@ void getGenMuons(TString processName /* WJets or DY */) {
 	    // If the particle has a W/Z boson ancestor
 	    if (has_boson_ancestor) {
 
-		//printf("Generator level muon pT: %f, eta: %f, phi: %f\n", genpart_pt[ipart], genpart_eta[ipart], genpart_phi[ipart]);
-
 		// Get the momentum of the selected muon
 		TLorentzVector muon;
 		muon.SetPtEtaPhiM(pt, eta, phi, 0.10566);
@@ -137,7 +147,12 @@ void getGenMuons(TString processName /* WJets or DY */) {
 		// Fill the histograms with the eta and pT of the selected muon
 		h_eta->Fill(muon.Eta());
 		h_phi->Fill(muon.Phi());
-		if (muon.Pt() > minPt) h_pt->Fill(muon.Pt());
+
+		if (muon.Pt() > minPt && muon.Eta() > minEta && muon.Eta() < maxEta) {
+
+		  h_pt->Fill(muon.Pt());
+		  break; // avoid Z->mu mu double counting, e.g. two muons from same event end up in same eta range
+		}
 	    }
 
 	}
@@ -147,7 +162,7 @@ void getGenMuons(TString processName /* WJets or DY */) {
     // Get pT distribution used for Run 2
     TString fn_pt_run2 = "";
     if (processName == "WJets") fn_pt_run2 = fn_muon_pt_WJets_run2;
-    if (processName == "DY") fn_pt_run2 = fn_muon_pt_DY_run2;
+    if (processName.Contains("DY")) fn_pt_run2 = fn_muon_pt_DY_run2;
 
     TFile *file_run2 = TFile::Open(fn_pt_run2);
     TH1F* h_pt_run2 = (TH1F*)file_run2->Get("pt");
@@ -166,9 +181,24 @@ void getGenMuons(TString processName /* WJets or DY */) {
     pad1->cd();
     h_pt->Draw("HIST");
     h_pt->GetXaxis()->SetTitle("pT (GeV)");
-    h_pt->Scale(h_pt_run2->Integral()/h_pt->Integral());
+    //h_pt->Scale(h_pt_run2->Integral()/h_pt->Integral());
     h_pt_run2->Draw("HIST same");
     h_pt_run2->SetLineColor(2);
+
+    //cout << "Efficiency: " << h_pt->Integral()/nEntries*100 << endl;
+    //cout << "Integral: " << h_pt->Integral() << endl;
+    //cout << "Scale factor: " << xs_WJets/nEntries << endl;
+    
+    //if (processName == "WJets") h_pt->Scale(xs_WJets/nEntries, "width");
+    if (processName == "WJets") h_pt->Scale(xs_WJets/nEntries);
+    if (processName == "DY50") h_pt->Scale(xs_DY50/nEntries); //*2);
+    if (processName == "DY10_50") h_pt->Scale(xs_DY10_50/nEntries); //*2);
+
+    h_pt->GetYaxis()->SetRangeUser(0, h_pt->GetMaximum()*1.5);
+
+    cout << "Process: " << processName << endl;
+    cout << "Run 2 distribution XS: " << h_pt_run2->Integral() << ", bin width: " << h_pt_run2->GetBinWidth(1) << ", total: " << h_pt_run2->Integral()*h_pt_run2->GetBinWidth(1) << endl;
+    cout << "Run 3 distribution XS: " << h_pt->Integral() << ", bin width: " << h_pt->GetBinWidth(1) << ", total: " << h_pt->Integral()*h_pt->GetBinWidth(1) << endl;
 
     // Create a TLegend and add entries to it
     TLegend *legend = new TLegend(0.7, 0.7, 0.9, 0.9); // x1,y1,x2,y2 (in normalized coordinates)
@@ -187,6 +217,12 @@ void getGenMuons(TString processName /* WJets or DY */) {
     TString fn_plot = "./plots/GenMuon_pt_eta_phi_" + processName + ".pdf";
     c->SaveAs(fn_plot);
 
-    //h_pt->Draw("pe");
-}
+    TString fn_out = "";
+    if (processName == "WJets") fn_out = "./plots/WJets_CutPtSpect_run3.root";
+    if (processName == "DY50") fn_out = "./plots/DY50_CutPtSpect_run3.root";
+    if (processName == "DY10_50") fn_out = "./plots/DY10_50_CutPtSpect_run3.root";
 
+    TFile f_out(fn_out, "recreate");
+    h_pt->Write();
+    f_out.Close();
+}
