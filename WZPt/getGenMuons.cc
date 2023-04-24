@@ -28,9 +28,9 @@ TString fn_DY50_nanoAOD = "./data/run3/fb32c113-0866-4653-b462-a7c99263ef13.root
 // DYJetsToLL_M-10to50_TuneCP5_13p6TeV-madgraphMLM-pythia8/Run3Winter22NanoAOD-122X_mcRun3_2021_realistic_v9-v1/NANOAODSIM
 TString fn_DY10_50_nanoAOD = "./data/run3/2518689b-3bc6-482c-a47d-2bd1d1db451e.root";
 // Run 2 WJets pT
-TString fn_muon_pt_WJets_run2 = "./data/run2/WJets_CutPtSpect_v2.root";
+TString fn_muon_pt_WJets_run2 = "../muons/data/run2/WJets_CutPtSpect_v2.root";
 // Run 2 DY pT
-TString fn_muon_pt_DY_run2 = "./data/run2/DY_CutPtSpect_v2.root";
+TString fn_muon_pt_DY_run2 = "./muons/data/run2/DY_CutPtSpect_v2.root";
 
 std::chrono::time_point<std::chrono::system_clock> t_old;
 std::vector<double> deq;

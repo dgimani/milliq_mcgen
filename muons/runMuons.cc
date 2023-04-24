@@ -74,8 +74,8 @@ int init(int production_mode, MCPTree &outtree){
 	}
         h_pt = (TH1D*)f->Get("pt");
         outtree.xsec = h_pt->Integral() / 1000;
-        // This includes eta [-0.025, 0.025];
-        outtree.xsec *= (MUON_ETAMAX - MUON_ETAMIN) / (2*0.025);
+        // This includes eta [-0.5, 0.5];
+        outtree.xsec *= (MUON_ETAMAX - MUON_ETAMIN) / (2*0.5);
         outtree.xsec *= (MUON_PHIMAX - MUON_PHIMIN) / (2*3.14159265);
     }else if(production_mode == 3){
         if (run3) {
@@ -85,8 +85,8 @@ int init(int production_mode, MCPTree &outtree){
 	}
         h_pt = (TH1D*)f->Get("pt");
         outtree.xsec = h_pt->Integral() / 1000;
-        // This includes eta [-0.025, 0.025];
-        outtree.xsec *= (MUON_ETAMAX - MUON_ETAMIN) / (2*0.025);
+        // This includes eta [-0.5, 0.5];
+        outtree.xsec *= (MUON_ETAMAX - MUON_ETAMIN) / (2*0.5);
         outtree.xsec *= (MUON_PHIMAX - MUON_PHIMIN) / (2*3.14159265);
     }else if(production_mode == 4){
         if (run3) {
