@@ -117,7 +117,7 @@ void getGenMuons(TString processName /* WJets or DY */) {
     TH1F* h_eta = new TH1F("h_eta", "Muon Eta Distribution", 50, -3.0, 3.0);
     TH1F* h_phi = new TH1F("h_phi", "Muon Phi Distribution", 50, -4.0, 4.0);
     //TH1F* h_pt = new TH1F("h_pt", "Muon PT Distribution", 40, 0, 100);
-    TH1F* h_pt = new TH1F("h_pt", "Muon PT Distribution", 100, 0, 100);
+    TH1F* h_pt = new TH1F("pt", "Muon PT Distribution", 100, 0, 100);
 
     // Loop over the events in the tree
     int counter = 0;

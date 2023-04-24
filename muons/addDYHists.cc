@@ -12,8 +12,8 @@ void addDYHists() {
   TFile *file_DY50 = TFile::Open(fn_DY50);
   TFile *file_DY10_50 = TFile::Open(fn_DY10_50);
 
-  TH1F* h_pt_DY50 = (TH1F*)file_DY50->Get("h_pt");
-  TH1F* h_pt_DY10_50 = (TH1F*)file_DY10_50->Get("h_pt");
+  TH1F* h_pt_DY50 = (TH1F*)file_DY50->Get("pt");
+  TH1F* h_pt_DY10_50 = (TH1F*)file_DY10_50->Get("pt");
 
   // add them, make a new pT hist
   TH1F* h_pt_DY = (TH1F*)h_pt_DY50->Clone("h_pt_DY");
@@ -41,6 +41,7 @@ void addDYHists() {
   TString fn_out = "./plots/DY_CutPtSpect_run3.root";
 
   TFile f_out(fn_out, "recreate");
+  h_pt_DY->SetName("pt");
   h_pt_DY->Write();
   f_out.Close();
 
