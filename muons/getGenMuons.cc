@@ -14,8 +14,8 @@ To RUN:
 */
 
 float minPt = 10; 
-float minEta = -0.025;
-float maxEta = 0.025;
+float minEta = -0.5;
+float maxEta = 0.5;
 //float xs_WJets = 53940*1000; // From Run 2 LO xs, fb
 float xs_WJets = 67350*1000; // From Run 2 NLO xs, fb
 float xs_DY50 = 5558*1000; // Run 3 xs, fb
