@@ -12,9 +12,12 @@ args = parser.parse_args()
 import os, sys
 import numpy as np
 import ROOT as r
-from millisim.Environment import Environment
-from millisim.Integrator import Integrator
-from millisim.Detector import *
+
+sys.path.append('./MilliqanSim/millisim')
+
+from MilliqanSim.millisim.Environment import Environment
+from MilliqanSim.millisim.Integrator import Integrator
+from MilliqanSim.millisim.Detector import *
 from configs import *
 try:
     from tqdm import tqdm
