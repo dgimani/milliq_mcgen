@@ -12,6 +12,7 @@ args = parser.parse_args()
 import os, sys
 import numpy as np
 import ROOT as r
+sys.path.append('./MilliqanSim')
 from millisim.Environment import Environment
 from millisim.Integrator import Integrator
 from millisim.Detector import *
