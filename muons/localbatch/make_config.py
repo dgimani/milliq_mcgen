@@ -7,17 +7,16 @@ njobs = 500
 offset = 0
 '''
 
-tag = "05102023"
+tag = "test"
 nevts_per_job = 10000
-njobs = 100
+njobs = 10
 offset = 0
 
 
-base_dir="/ceph/cms/store/user/hmei/milliQan_generation/muons/"
+base_dir="/ceph/cms/store/user/fsetti/milliQan_generation/muons/"
 os.system("mkdir -p %s"%(base_dir))
 
 names = {"qcd":1,"w":2,"dy":3,"qcd_nonbc":4}
-#names = {"w":2,"dy":3}
 
 for process in names.keys() :
     mode = int(names[process])
@@ -45,7 +44,7 @@ for process in names.keys() :
     +SingularityImage="/cvmfs/singularity.opensciencegrid.org/cmssw/cms:rhel7-m202006"
     +RequestK8SNamespace="cms-ucsd-t2"
 
-    x509userproxy=/tmp/x509up_u31693
+    x509userproxy=/tmp/x509up_u31704
 
     executable=wrapper.sh
     transfer_executable=True
