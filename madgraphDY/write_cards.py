@@ -5,8 +5,10 @@ from textwrap import dedent
 iseed = 0
 
 model = "mq5"
-carddir = "./runs/out_{model}_13tev_v1/".format(model=model)
-nevents=1000000
+carddir = "./runs/out_{model}_13p6tev_v1/".format(model=model)
+# nevents=1000000
+nevents=10000
+
 #  njobs_per_mass = 90
 njobs_per_mass = 1
 # carddir = "./runs/out_{model}_13tev_xsecscan/".format(model=model)
