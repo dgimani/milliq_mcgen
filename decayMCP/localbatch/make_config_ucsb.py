@@ -94,7 +94,7 @@ for m in masses:
         os.system("rm blah.json")
         
 
-fout = open("bsub_jobs.sh",'w')
+fout = open("../bsub_jobs.sh",'w')
 fout.write("#!/bin/bash\n\n")
 
 print("# SAMPLES:", len(points))
