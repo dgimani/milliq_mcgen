@@ -4,11 +4,11 @@ import json
 import subprocess
 import numpy as np
 import ROOT as r
+import ctypes
 
-outdir = "/hadoop/cms/store/user/bemarsh/milliqan/milliq_mcgen/ntuples_v7"
+outdir = "/net/cms26/cms26r0/schmitz/milliq_mcgen/gentuples"
 
-masses = [0.010, 0.020, 0.030, 0.050, 0.100, 0.200, 0.300, 0.400, 0.500, 0.700, 1.000, 1.400, 1.600, 1.800, 2.000, 3.000, 4.000, 5.000, 7.000]
-# masses = [0.400] 
+masses = [0.010, 0.020, 0.030, 0.050, 0.100, 0.200, 0.300, 0.400, 0.500, 0.700, 1.000, 1.400, 1.600, 1.800, 2.000, 3.000, 4.000, 5.000]
 N_target_events = 2e6
 min_events = 10000
 round_to = 10000
@@ -23,24 +23,25 @@ def get_xsec(decay_mode, m):
     if decay_mode == 0:
         decay_mode = "total"
 
-    g = xsec_file.Get("xsecs_"+str(decay_mode))
-    x = r.Double(-1)
-    y = r.Double(0)
+    g = xsec_file.Get("xsecs_" + str(decay_mode))
+    x = ctypes.c_double(0)
+    y = ctypes.c_double(0)
     n = -1
-    while n < g.GetN()-1 and x < m:
+    while n < g.GetN() - 1 and x.value < m:
         n += 1
         g.GetPoint(n, x, y)
 
     if n == 0:
-        return y
+        return y.value
 
-    if x < m:
+    if x.value < m:
         return 0.0
 
-    xprev, yprev = r.Double(), r.Double()
-    g.GetPoint(n-1, xprev, yprev)
+    xprev = ctypes.c_double()
+    yprev = ctypes.c_double()
+    g.GetPoint(n - 1, xprev, yprev)
     
-    return yprev + (y - yprev) / (x - xprev) * (m - xprev)
+    return yprev.value + (y.value - yprev.value) / (x.value - xprev.value) * (m - xprev.value)
 
 samp_names = {
     1:  "b_jpsi",
@@ -65,34 +66,32 @@ for m in masses:
     xs = [get_xsec(i, m) for i in range(16)]
 
     total_xsec = xs[0]
-    sorted_xs = sorted(zip(range(1,16),xs[1:]), key=lambda x:x[1], reverse=True)
+    sorted_xs = sorted(zip(range(1, 16), xs[1:]), key=lambda x: x[1], reverse=True)
     
-    cum_xs = np.cumsum(zip(*sorted_xs)[1]) / total_xsec
+    cum_xs = np.cumsum([x[1] for x in sorted_xs]) / total_xsec
     max_idx = max(0, np.argmax(cum_xs > 0.9999))
 
-    print "\nmass =", m
-    for i, (dm, xs) in enumerate(sorted_xs[:max_idx+1]):
-        Nevt = xs / total_xsec * N_target_events
+    print("\nmass =", m)
+    for i, (dm, xs_val) in enumerate(sorted_xs[:max_idx + 1]):
+        Nevt = xs_val / total_xsec * N_target_events
         Nevt = max(Nevt, min_events)
         Nevt = int(round(Nevt / round_to) * round_to)
-        subdir = os.path.join(outdir, "m_{0}".format(str(m).replace(".","p")), samp_names[dm])
-        os.system("mkdir -p "+subdir)
-        print "  {0:2d} {1:.3e} {2:.4f} {3:8d}".format(dm, xs, cum_xs[i], Nevt)
-        points.append({"decay_mode":dm, "mass":m, "n_events":Nevt, "outdir":subdir})
+        subdir = os.path.join(outdir, "m_{0}".format(str(m).replace(".", "p")), samp_names[dm])
+        os.system("mkdir -p " + subdir)
+        print("  {0:2d} {1:.3e} {2:.4f} {3:8d}".format(dm, xs_val, cum_xs[i], Nevt))
+        points.append({"decay_mode": dm, "mass": m, "n_events": Nevt, "outdir": subdir})
         with open("blah.json", 'w') as fid:
             json.dump(points[-1], fid, indent=4, ensure_ascii=True)
-        # os.system("hdfs dfs -copyFromLocal -f blah.json "+os.path.join(subdir,"metadata.json"))
-        os.system("cp blah.json "+os.path.join(subdir,"metadata.json"))
+        os.system("cp blah.json " + os.path.join(subdir, "metadata.json"))
         os.system("rm blah.json")
-        
 
-print "# SAMPLES:", len(points)
+print("# SAMPLES:", len(points))
 cmds = []
 for p in points:
-    njobs = p["n_events"] / nevts_per_job
+    njobs = int(p["n_events"] / nevts_per_job)
     for j in range(njobs):
-        localname = "output_{0}_{1}_{2}.root".format(p["decay_mode"],p["mass"],j+1)
-        final_name = os.path.join(p["outdir"], "output_{0}.root".format(j+1))
+        localname = "output_{0}_{1}_{2}.root".format(p["decay_mode"], p["mass"], j + 1)
+        final_name = os.path.join(p["outdir"], "output_{0}.root".format(j + 1))
         cmd = "nice -n 19 ./runDecays -d {0} -o {1} -m {2} -n {3} -N {4} -e {5} &> /dev/null; hdfs dfs -copyFromLocal -f {1} {6} &> /dev/null; rm {1};".format(
             p["decay_mode"],
             localname,
@@ -100,11 +99,11 @@ for p in points:
             nevts_per_job,
             p["n_events"],
             nevts_per_job * j,
-            final_name.replace("/hadoop","")
-            )
+            final_name.replace("/ceph", "")
+        )
         cmds.append(cmd)
 
-print "# JOBS:", len(cmds)
+print("# JOBS:", len(cmds))
 
 ps = []
 done = 0
@@ -118,7 +117,7 @@ while done < len(cmds):
         if res is not None:
             done += 1
             running -= 1
-    for cmd in cmds[current:current+MAXLOCALJOBS-running]:
+    for cmd in cmds[current:current + MAXLOCALJOBS - running]:
         ps.append(subprocess.Popen(cmd, shell=True))
         running += 1
         current += 1
@@ -126,6 +125,6 @@ while done < len(cmds):
         thistime = time.time()
         if thistime > lasttime + 20:
             lasttime = thistime
-            print "{0}/{1} jobs done. {2} currently running. Checking again in 20 seconds...".format(done, len(cmds), running)
+            print("{0}/{1} jobs done. {2} currently running. Checking again in 20 seconds...".format(done, len(cmds), running))
         time.sleep(1)
 
