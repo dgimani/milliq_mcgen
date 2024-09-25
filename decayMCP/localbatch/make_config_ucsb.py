@@ -11,18 +11,15 @@ outdir = "/net/cms26/cms26r0/schmitz/milliq_mcgen/gentuples"
 
 # masses = [0.010, 0.020, 0.030, 0.050, 0.100, 0.200, 0.300, 0.350, 0.400, 0.500, 0.700, 1.000, 1.400, 1.600, 1.800, 2.000, 3.000, 3.500, 4.000, 4.500, 5.000]
 # masses = [0.010, 0.020, 0.030, 0.050, 0.100, 0.200, 0.300, 0.350, 0.400, 0.500]
-# masses = [2.000, 3.000, 3.500, 4.000, 4.500, 5.000]
-masses = [0.010, 0.10, 1.0, 5.0]
+masses = [0.010, 0.050, 0.10, 0.50, 1.0, 5.0]
 
 # we target this amount of events per mass point, in practice it will be a bit higher since we
 # put a floor on the number of events in each mode
-#N_target_events = 5e7 #usual size
-N_target_events = 5e5
+N_target_events = 5e7
 
 # the number of events in each job (i.e. each output file).
 # Since every mode must have at least 1 job, this is effectively the minimum number of events per mode
-# nevts_per_job = 500000  #usual size
-nevts_per_job = 50000
+nevts_per_job = 500000  
 
 
 xsec_file = r.TFile("../../scripts/plot-xsecs/xsecs.root")
@@ -84,13 +81,15 @@ for m in masses:
         Nevt = xs / total_xsec * N_target_events
         Nevt = max(Nevt, nevts_per_job)
         Nevt = int(round(Nevt / nevts_per_job) * nevts_per_job)
-        subdir = os.path.join(outdir, "m_{0}".format(str(m).replace(".","p")), samp_names[dm])
-        os.system("mkdir -p "+subdir)
+        # Create directory structure: [outdir]/m_[mass]/[mode]
+        mass_dir = os.path.join(outdir, "m_{0}".format(str(m).replace(".","p")))
+        mode_dir = os.path.join(mass_dir, samp_names[dm])
+        os.makedirs(mode_dir, exist_ok=True)  # Create the directories if they don't exist
         print("  {0:2d} {1:.3e} {2:.4f} {3:8d}".format(dm, xs, cum_xs[i], Nevt))
-        points.append({"decay_mode":dm, "mass":m, "n_events":Nevt, "outdir":subdir})
+        points.append({"decay_mode":dm, "mass":m, "n_events":Nevt, "outdir":mode_dir})
         with open("blah.json", 'w') as fid:
             json.dump(points[-1], fid, indent=4, ensure_ascii=True)
-        os.system("cp blah.json "+os.path.join(subdir,"metadata.json"))
+        os.system("cp blah.json "+os.path.join(mode_dir,"metadata.json"))
         os.system("rm blah.json")
         
 
@@ -102,11 +101,12 @@ cmds = []
 for p in points:
     njobs = int(p["n_events"] / nevts_per_job)
     for j in range(njobs):
-        localname = "output_{0}_{1}_{2}.root".format(p["decay_mode"],p["mass"],j+1)
-        final_name = os.path.join(p["outdir"], "output_{0}.root".format(j+1))
+        localname = "output_{0}.root".format(j+1)
+        final_name = os.path.join(p["outdir"], localname)
+        # Adjust the bsub command to reflect the correct output path
         cmd = "./runDecays -d {0} -o {1} -m {2} -n {3} -N {4} -e {5}".format(
             p["decay_mode"],
-            localname,
+            final_name,  # Correct output path based on mass and mode directories
             p["mass"],
             nevts_per_job,
             p["n_events"],
