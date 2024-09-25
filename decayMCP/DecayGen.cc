@@ -155,7 +155,7 @@ int DecayGen::Initialize(int decay_mode, float m_mCP, bool isRun3){
         if(decay_mode == 11){
             // direct J/psi
 	    if (run3) {
-	      finfo = new TFile((BASE_DIR+"/oniaDirect/13p6Tev/merged_jpsi_run3.root").c_str());
+	      finfo = new TFile((BASE_DIR+"/oniaDirect/13p6TeV/merged_jpsi_run3.root").c_str());
 	    } else {
 	      finfo = new TFile((BASE_DIR+"/oniaDirect/CMS-13-TeV/theory/psiLowPt/merged_jpsi.root").c_str());
 	    }
@@ -164,7 +164,7 @@ int DecayGen::Initialize(int decay_mode, float m_mCP, bool isRun3){
         }else if(decay_mode == 12){
             // direct psi(2S)
 	    if (run3) {
-	      finfo = new TFile((BASE_DIR+"/oniaDirect/13p6Tev/merged_psiprime_run3.root").c_str());
+	      finfo = new TFile((BASE_DIR+"/oniaDirect/13p6TeV/merged_psiprime_run3.root").c_str());
 	    } else {
 	      finfo = new TFile((BASE_DIR+"/oniaDirect/CMS-13-TeV/theory/psiLowPt/merged_psiprime.root").c_str());
 	    }
