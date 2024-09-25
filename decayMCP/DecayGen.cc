@@ -14,7 +14,7 @@
 
 // const float MINBIAS_XSEC = (69.2e-3) * 1e12; // 69.2 mb converted to pb
 const float MINBIAS_XSEC = (80.0e-3) * 1e12; // 80 mb converted to pb
-
+const bool run3 = true;
 string DecayGen::GetDecayString(int decay_mode){
     if(decay_mode == 1)       return "B -> J/psi X, J/psi -> mCP mCP";
     else if(decay_mode == 2)  return "B -> psi(2S) X, psi(2S) -> mCP mCP";
