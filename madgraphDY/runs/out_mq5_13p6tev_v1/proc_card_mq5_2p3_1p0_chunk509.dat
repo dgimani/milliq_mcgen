@@ -1,0 +1,28 @@
+
+set auto_update 0
+set run_mode 2
+set nb_core 1
+
+import model mq5_UFO-full
+
+define p = p b b~
+define j = j b b~
+generate p p > e+ e-
+add process p p > e+ e- j
+
+output ./runs/out_mq5_13p6tev_v1//mq5_2p3_1p0_chunk509 -nojpeg
+launch
+
+set param_card MASS 11 2.3
+set param_card TEMP 11 1.0
+set run_card ebeam1 6800.0
+set run_card ebeam2 6800.0
+set run_card nevents 1000000
+set run_card use_syst False
+
+set run_card ptl -1.0
+set run_card etal -1.0
+set run_card ickkw 0
+set run_card xqcut 0.0
+
+set run_card iseed 12510
