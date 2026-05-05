@@ -52,8 +52,8 @@ else:
 #    os.system("tar xf MilliqanSim/bfield/bfield_coarse.pkl.tar.xz -C MilliqanSim/bfield/")
 
 bFile = "MilliqanSim/bfield/bfield_coarse.pkl"
-#if pyVersion == 3: bFile = "MilliqanSim/bfield/bfield_coarse_p3.pkl"
-if pyVersion == 3: bFile = "/net/cms11/data/hmei/milliqan/bfield/bfield_coarse_p3.pkl"
+if pyVersion == 3: bFile = "MilliqanSim/bfield/bfield_coarse_p3.pkl"
+#if pyVersion == 3: bFile = "/net/cms11/data/hmei/milliqan/bfield/bfield_coarse_p3.pkl"
 env = Environment(
     mat_setup = cfg.mat_setup,
     bfield = cfg.bfield,
@@ -124,10 +124,14 @@ fout = r.TFile("output.root", "RECREATE")
 tout = tin.CopyTree("")
 sim_q = np.array([itg.Q], dtype=float)
 does_hit_p = np.zeros(1, dtype=bool)
-hit_p_xyz = r.TVector3()
+#hit_p_xyz = r.TVector3()
+hit_p_xyzt = r.TLorentzVector()
+#hit_p_t = np.zeros(1, dtype=float)
 hit_p_p4 = r.TLorentzVector()
 does_hit_m = np.zeros(1, dtype=bool)
-hit_m_xyz = r.TVector3()
+#hit_m_xyz = r.TVector3()
+hit_m_xyzt = r.TLorentzVector()
+#hit_m_t = np.zeros(1, dtype=float)
 hit_m_p4 = r.TLorentzVector()
 hit_p_nbars = np.zeros(1, dtype=int)
 hit_p_nlayers = np.zeros(1, dtype=int)
@@ -143,10 +147,13 @@ hit_m_bar_dists = np.zeros(mdet.nbars, dtype=np.float32)
 hit_m_slabs = np.zeros(1, dtype=int)
 b_sim_q = tout.Branch("sim_q", sim_q, "sim_q/D")
 b_does_hit_p = tout.Branch("does_hit_p", does_hit_p, "does_hit_p/O")
-b_hit_p_xyz = tout.Branch("hit_p_xyz", hit_p_xyz)
+#b_hit_p_xyz = tout.Branch("hit_p_xyz", hit_p_xyz)
+b_hit_p_xyzt = tout.Branch("hit_p_xyzt", hit_p_xyzt)
+#b_hit_p_t = tout.Branch("hit_p_t", hit_p_t, "hit_p_t/D")
 b_hit_p_p4 = tout.Branch("hit_p_p4", hit_p_p4)
 b_does_hit_m = tout.Branch("does_hit_m", does_hit_m, "does_hit_m/O")
-b_hit_m_xyz = tout.Branch("hit_m_xyz", hit_m_xyz)
+b_hit_m_xyzt = tout.Branch("hit_m_xyzt", hit_m_xyzt)
+#b_hit_m_t = tout.Branch("hit_m_t", hit_m_t, "hit_m_t/D")
 b_hit_m_p4 = tout.Branch("hit_m_p4", hit_m_p4)
 b_hit_p_nbars = tout.Branch("hit_p_nbars", hit_p_nbars, "hit_p_nbars/I")
 b_hit_p_nlayers = tout.Branch("hit_p_nlayers", hit_p_nlayers, "hit_p_nlayers/I")
@@ -161,7 +168,7 @@ b_hit_m_bar_idxs = tout.Branch("hit_m_bar_idxs", hit_m_bar_idxs, "hit_m_bar_idxs
 b_hit_m_bar_dists = tout.Branch("hit_m_bar_dists", hit_m_bar_dists, "hit_m_bar_dists[hit_m_nbars]/F")
 b_hit_m_slabs = tout.Branch("hit_m_slabs", hit_m_slabs, "hit_m_slabs/I")
 
-bs = [b_sim_q, b_does_hit_p, b_hit_p_xyz, b_hit_p_p4, b_does_hit_m, b_hit_m_xyz, b_hit_m_p4,
+bs = [b_sim_q, b_does_hit_p, b_hit_p_xyzt, b_hit_p_p4, b_does_hit_m, b_hit_m_xyzt, b_hit_m_p4,
       b_hit_p_nbars, b_hit_p_nlayers, b_hit_p_line, b_hit_p_bar_idxs, b_hit_p_bar_dists,
       b_hit_m_nbars, b_hit_m_nlayers, b_hit_m_line, b_hit_m_bar_idxs, b_hit_m_bar_dists,
       b_hit_p_slabs, b_hit_m_slabs]
@@ -218,20 +225,21 @@ for i in it:
             bars_intersects = mdet.find_entries_exits(traj)
             slabs_intersects = [slab.find_intersection(traj) for slab in slabs]
             # if traj_array is not None and idict is not None:
+            finalTime = tvec[-1]
             if traj_array is not None:
                 traj_array.append((tvec,traj))
-            return idict, slabs_intersects, bars_intersects
+            return idict, slabs_intersects, bars_intersects, finalTime
         else:
-            return None, None, None
+            return None, None, None, None
 
     if IS_MU:
         np.random.seed(tin.event)
         q = 1.0 * (2*np.random.randint(2) - 1)
         sim_q[0] = q
 
-    idict_p, slabs_p, bars_p = do_propagate(tin.p4_p, q, trajs if DO_DRAW else None)
+    idict_p, slabs_p, bars_p, time_p = do_propagate(tin.p4_p, q, trajs if DO_DRAW else None)
     if not IS_MU:
-        idict_m, slabs_m, bars_m = do_propagate(tin.p4_m, -q, trajs if DO_DRAW else None)    
+        idict_m, slabs_m, bars_m, time_m = do_propagate(tin.p4_m, -q, trajs if DO_DRAW else None)    
     else:
         idict_m = None
 
@@ -244,7 +252,9 @@ for i in it:
 
     if idict_p is not None:
         does_hit_p[0] = True
-        hit_p_xyz.SetXYZ(idict_p["v"], idict_p["w"], det.dist_to_origin)
+        #hit_p_xyz.SetXYZ(idict_p["v"], idict_p["w"], det.dist_to_origin)
+        hit_p_xyzt.SetXYZT(idict_p["v"], idict_p["w"], det.dist_to_origin, time_p)
+        #hit_p_t[0] = time_p
         hit_p_p4.SetPxPyPzE(*get_projected_p4(idict_p["p_int"]))
         hit_p_nbars[0] = len(bars_p)
         hit_p_nlayers[0] = len(set([i[0][0] for i in bars_p]))
@@ -258,7 +268,9 @@ for i in it:
                 hit_p_slabs[0] |= (1<<i)
     else:
         does_hit_p[0] = False
-        hit_p_xyz.SetXYZ(0,0,0)
+        #hit_p_xyz.SetXYZ(0,0,0)
+        hit_p_xyzt.SetXYZT(0,0,0,0)
+        #hit_p_t[0] = time_p
         hit_p_p4.SetPxPyPzE(0,0,0,0)
         hit_p_nbars[0] = 0
         hit_p_nlayers[0] = 0
@@ -267,7 +279,9 @@ for i in it:
 
     if idict_m is not None:
         does_hit_m[0] = True
-        hit_m_xyz.SetXYZ(idict_m["v"], idict_m["w"], det.dist_to_origin)
+        #hit_m_xyz.SetXYZ(idict_m["v"], idict_m["w"], det.dist_to_origin)
+        hit_m_xyzt.SetXYZT(idict_m["v"], idict_m["w"], det.dist_to_origin, time_m)
+        #hit_m_t[0] = time_m
         hit_m_p4.SetPxPyPzE(*get_projected_p4(idict_m["p_int"]))
         hit_m_nbars[0] = len(bars_m)
         hit_m_nlayers[0] = len(set([i[0][0] for i in bars_m]))
@@ -281,7 +295,9 @@ for i in it:
                 hit_m_slabs[0] |= (1<<i)
     else:
         does_hit_m[0] = False
-        hit_m_xyz.SetXYZ(0,0,0)
+        #hit_m_xyz.SetXYZ(0,0,0)
+        hit_m_xyzt.SetXYZT(0,0,0,0)
+        #hit_m_t[0] = time_m
         hit_m_p4.SetPxPyPzE(0,0,0,0)
         hit_m_nbars[0] = 0
         hit_m_nlayers[0] = 0
