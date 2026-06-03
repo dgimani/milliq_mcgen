@@ -1,8 +1,8 @@
 
 class Config:
     def __init__(self, name):
-        self.det_width = 1.0
-        self.det_height = 1.0
+        self.det_width = 3.0
+        self.det_height = 3.0
         self.dt = 0.1
 
         if name == "MQ":
@@ -33,6 +33,33 @@ class Config:
             self.m_vals = [0.01, 0.05, 0.1,  0.2, 0.3, 0.4, 0.5, 0.7, 1.0, 1.4, 1.6, 1.8, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0]
             self.pt_cuts = [0.10, 0.15, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 1.2, 1.2, 1.4, 1.8, 2.2, 2.5, 3.0, 3.5]
 
+        elif name == "MQ3Slab":      # Run 3 Slab
+            self.mat_setup = 'cms'
+            self.bfield = 'cms'            
+            self.dist_to_detector = 37.
+            self.eta = 0.17
+            self.amount_of_rock = 17.
+            self.max_nsteps = 3800
+            self.etamin = -0.1      # self.eta - 0.18
+            self.etamax = 0.3       # self.eta + 0.18
+            self.phimin = -0.1      # -0.03 
+            self.phimax = 2.4
+            self.m_vals = [0.01, 0.05, 0.1,  0.2, 0.3, 0.4, 0.5, 0.7, 1.0, 1.4, 1.6, 1.8, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0]
+            self.pt_cuts = [0.10, 0.15, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 1.2, 1.2, 1.4, 1.8, 2.2, 2.5, 3.0, 3.5]
+
+        elif name == "FORMOSA":      # FORMOSA demonstrator
+            self.mat_setup = 'atlas' #placeholder for now
+            self.bfield = 'atlas'    #placeholder for now 
+            self.dist_to_detector = 482.
+            self.eta = 8.5
+            self.amount_of_rock = 100.
+            self.max_nsteps = 38000
+            self.etamin = 2          #??
+            self.etamax = 1000       #??
+            self.phimin = -0.1 
+            self.phimax = 2.4
+            self.m_vals = [0.01, 0.05, 0.1,  0.2, 0.3, 0.4, 0.5, 0.7, 1.0, 1.4, 1.6, 1.8, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0]
+            self.pt_cuts = [0.10, 0.15, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 1.2, 1.2, 1.4, 1.8, 2.2, 2.5, 3.0, 3.5]
             
         elif name == "mapp_theta25":
             self.mat_setup = 'justrock'
