@@ -33,7 +33,7 @@ except ImportError:
     loaded_tqdm = False
     
 pyVersion = sys.version_info[0]
-DO_DRAW = False
+DO_DRAW = True
    
 cfg = Config(args.config)
 IS_MU = False
@@ -52,12 +52,24 @@ else:
 #    os.system("tar xf MilliqanSim/bfield/bfield_coarse.pkl.tar.xz -C MilliqanSim/bfield/")
 
 bFile = "MilliqanSim/bfield/bfield_coarse.pkl"
+dipoleFileDicts = {
+        "INNER QUAD": "MilliqanSim/bfield/InnerQuad_fieldmap.pkl",
+        "D1": "MilliqanSim/bfield/D1_fieldmap.pkl",
+        "D2": "MilliqanSim/bfield/D2_fieldmap.pkl",
+        "MAIN DIPOLE": "MilliqanSim/bfield/MainDipole_fieldmap.pkl",
+        "MAIN QUAD": "MilliqanSim/bfield/MainQuad_fieldmap.pkl"}
 if pyVersion == 3: bFile = "MilliqanSim/bfield/bfield_coarse_p3.pkl"
 #if pyVersion == 3: bFile = "/net/cms11/data/hmei/milliqan/bfield/bfield_coarse_p3.pkl"
+if cfg.bfield=='cms':
+    bFile = "MilliqanSim/bfield/bfield_coarse_p3.pkl"
+elif cfg.bfield=='formosa':
+    bFile = dipoleFileDicts
+else:
+    bFile = None
 env = Environment(
     mat_setup = cfg.mat_setup,
     bfield = cfg.bfield,
-    bfield_file = bFile if cfg.bfield=='cms' else None,
+    bfield_file = bFile,
     rock_begins = cfg.dist_to_detector - cfg.amount_of_rock - 0.20,
     rock_ends = cfg.dist_to_detector - 0.20,
     density_mult = args.density_mult,
@@ -181,6 +193,7 @@ print("Simulating {0} events, 2 trajectories per event".format(Nevt))
 trajs = []
 n_hits = 0
 it = range(evt_start, evt_start+Nevt)
+#it = range(evt_start, evt_start+1)
 using_tqdm = False
 if "redirect" not in args.input_file:
     # condor jobs have "redirect" in file name (xrootd). Don't use tqdm for these since it blows up logs
@@ -219,8 +232,8 @@ for i in it:
         if within_bounds:
             x0 = 1000.*np.array([0., 0., 0., p4.Px(), p4.Py(), p4.Pz()])
             # traj,_ = itg.propagate(x0)
-            traj,tvec = itg.propagate(x0, fast=True, fast_seed=seed)
-            #traj,tvec = itg.propagate(x0, fast=False, fast_seed=seed)
+            #traj,tvec = itg.propagate(x0, fast=True, fast_seed=seed)
+            traj,tvec = itg.propagate(x0, fast=False, fast_seed=seed)
             idict = det.find_intersection(traj)
             bars_intersects = mdet.find_entries_exits(traj)
             slabs_intersects = [slab.find_intersection(traj) for slab in slabs]

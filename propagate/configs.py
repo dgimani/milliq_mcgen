@@ -3,7 +3,7 @@ class Config:
     def __init__(self, name):
         self.det_width = 3.0
         self.det_height = 3.0
-        self.dt = 0.1
+        self.dt = 0.01
 
         if name == "MQ":
             self.mat_setup = 'cms'
@@ -48,12 +48,12 @@ class Config:
             self.pt_cuts = [0.10, 0.15, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 1.2, 1.2, 1.4, 1.8, 2.2, 2.5, 3.0, 3.5]
 
         elif name == "FORMOSA":      # FORMOSA demonstrator
-            self.mat_setup = 'atlas' #placeholder for now
-            self.bfield = 'atlas'    #placeholder for now 
+            self.mat_setup = 'cms' #'formosa' #placeholder for now
+            self.bfield = 'formosa'    #placeholder for now 
             self.dist_to_detector = 482.
             self.eta = 8.5
             self.amount_of_rock = 100.
-            self.max_nsteps = 38000
+            self.max_nsteps = 380000
             self.etamin = 2          #??
             self.etamax = 1000       #??
             self.phimin = -0.1 
